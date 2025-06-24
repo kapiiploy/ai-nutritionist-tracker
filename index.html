@@ -18,15 +18,15 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #f2f2f2; }
-        #user-id-screen { display: block; } /* แสดงหน้าตั้ง ID ก่อน */
-        #app-container { display: none; } /* ซ่อนแอปไว้ก่อน */
+        #user-id-screen { display: block; }
+        #app-container { display: none; }
         #user-info { text-align: right; margin-bottom: 10px; font-size: 14px; color: #555;}
     </style>
 </head>
 <body>
     <div id="user-id-screen" class="container">
         <h2>ระบุตัวตนผู้ใช้งาน</h2>
-        <p>กรุณาตั้งชื่อผู้ใช้ (User ID) ที่ไม่ซ้ำใครเพื่อบันทึกข้อมูลของคุณ (เช่น ชื่อเล่น, อีเมล, หรือรหัสส่วนตัว)</p>
+        <p>กรุณาตั้งชื่อผู้ใช้ (User ID) ที่ไม่ซ้ำใครเพื่อบันทึกข้อมูลของคุณ</p>
         <form id="user-id-form">
             <div><label for="user-id-input">User ID ของฉัน:</label><input type="text" id="user-id-input" required></div>
             <button type="submit">เริ่มต้นใช้งาน</button>
@@ -48,6 +48,14 @@
             <div id="results" class="results-box"><p>ผลลัพธ์การคำนวณจะแสดงที่นี่...</p></div>
         </div>
         <div class="container">
+            <h2>แนะนำเมนูอาหาร</h2>
+            <form id="recommend-form">
+                <div><label for="target-calories">เป้าหมายแคลอรี่ (kcal):</label><input type="number" id="target-calories" value="2000" required></div>
+                <button type="submit">แนะนำเมนู</button>
+            </form>
+            <div id="recommendation-results" class="results-box"><p>เมนูที่แนะนำจะแสดงที่นี่...</p></div>
+        </div>
+        <div class="container">
             <h2>บันทึกมื้ออาหาร</h2>
             <form id="log-form">
                 <div><label for="meal-name">ชื่ออาหาร:</label><input type="text" id="meal-name" required></div>
@@ -67,6 +75,10 @@
             <h2>กราฟสรุปแคลอรี่รายวัน</h2>
             <canvas id="calorie-chart"></canvas>
         </div>
+        <div class="container">
+            <h2>กราฟสรุปแคลอรี่รายสัปดาห์ (เฉลี่ยต่อวัน)</h2>
+            <canvas id="weekly-calorie-chart"></canvas>
+        </div>
     </div>
     <script>
         const API_URL = 'https://api-main-435974249973.asia-southeast1.run.app';
@@ -79,10 +91,13 @@
         const changeUserBtn = document.getElementById('change-user-btn');
         const healthForm = document.getElementById('health-form');
         const resultsDiv = document.getElementById('results');
+        const recommendForm = document.getElementById('recommend-form');
+        const recommendResultsDiv = document.getElementById('recommendation-results');
         const logForm = document.getElementById('log-form');
         const logTableBody = document.getElementById('log-table-body');
         const chartCanvas = document.getElementById('calorie-chart');
-        let dailyChart;
+        const weeklyChartCanvas = document.getElementById('weekly-calorie-chart');
+        let dailyChart, weeklyChart;
         let currentUserId = null;
 
         function setupUser(userId) {
@@ -93,6 +108,7 @@
                 userIdScreen.style.display = 'none';
                 appContainer.style.display = 'block';
                 fetchAndDisplayLogs();
+                fetchAndDisplayWeeklySummary();
             } else {
                 userIdScreen.style.display = 'block';
                 appContainer.style.display = 'none';
@@ -103,11 +119,9 @@
             if (!currentUserId) throw new Error("User ID not set");
             const headers = { ...options.headers, 'X-User-ID': currentUserId };
             const response = await fetch(url, { ...options, headers });
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Unknown server error' }));
-                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-            }
-            return response.json();
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || `HTTP error! status: ${response.status}`);
+            return data;
         }
 
         async function fetchAndDisplayLogs() {
@@ -125,6 +139,15 @@
             }
         }
 
+        async function fetchAndDisplayWeeklySummary() {
+            try {
+                const summary = await fetchWithUserId(`${API_URL}/get_weekly_summary`);
+                renderWeeklyChart(summary);
+            } catch (error) {
+                console.error('Error fetching weekly summary:', error);
+            }
+        }
+
         function renderDailyChart(logs) {
             const dailyData = logs.reduce((acc, log) => {
                 const date = new Date(log.timestamp).toLocaleDateString('th-TH');
@@ -133,13 +156,12 @@
                 return acc;
             }, {});
             if (dailyChart) dailyChart.destroy();
-            dailyChart = new Chart(chartCanvas, {
-                type: 'line',
-                data: {
-                    labels: Object.keys(dailyData).reverse(),
-                    datasets: [{ label: 'แคลอรี่', data: Object.values(dailyData).reverse(), borderColor: '#007bff', fill: true }]
-                }
-            });
+            dailyChart = new Chart(chartCanvas, { type: 'line', data: { labels: Object.keys(dailyData).reverse(), datasets: [{ label: 'แคลอรี่', data: Object.values(dailyData).reverse(), borderColor: '#007bff', fill: true }] } });
+        }
+
+        function renderWeeklyChart(summary) {
+            if (weeklyChart) weeklyChart.destroy();
+            weeklyChart = new Chart(weeklyChartCanvas, { type: 'bar', data: { labels: summary.map(item => item.week_label), datasets: [{ label: 'ค่าเฉลี่ยแคลอรี่ต่อวัน', data: summary.map(item => item.avg_calories_per_day), backgroundColor: 'rgba(40, 167, 69, 0.7)' }] }, options: { scales: { y: { beginAtZero: true } } } });
         }
         
         // --- Event Listeners ---
@@ -171,6 +193,22 @@
                 resultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`;
             }
         });
+        
+        recommendForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const target = document.getElementById('target-calories').value;
+            recommendResultsDiv.innerHTML = '<p>กำลังค้นหาเมนู...</p>';
+            try {
+                const data = await fetch(`${API_URL}/recommend_meals?target=${target}`).then(res => res.json());
+                if(data.error) throw new Error(data.error);
+                let html = '<h4>แผนการกินที่แนะนำ:</h4><ul>';
+                data.forEach(meal => { html += `<li>${meal.name} (${meal.calories} kcal)</li>`; });
+                html += '</ul>';
+                recommendResultsDiv.innerHTML = html;
+            } catch (err) {
+                recommendResultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`;
+            }
+        });
 
         logForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -179,9 +217,7 @@
                 calories: parseInt(document.getElementById('calories').value),
                 sodium: parseInt(document.getElementById('sodium').value) || 0
             };
-            if (!mealData.meal_name || isNaN(mealData.calories)) {
-                alert('กรุณากรอกชื่ออาหารและแคลอรี่'); return;
-            }
+            if (!mealData.meal_name || isNaN(mealData.calories)) { alert('กรุณากรอกชื่ออาหารและแคลอรี่'); return; }
             try {
                 await fetchWithUserId(`${API_URL}/log_meal`, {
                     method: 'POST',
@@ -190,6 +226,7 @@
                 });
                 logForm.reset();
                 fetchAndDisplayLogs();
+                fetchAndDisplayWeeklySummary();
             } catch (error) {
                 alert(`ไม่สามารถบันทึกข้อมูลได้: ${error.message}`);
             }
