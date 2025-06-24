@@ -5,11 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Nutritionist & Health Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- 1. เพิ่ม Firebase SDK Scripts เข้ามา -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background-color: #f9f9f9; color: #333; }
         h1, h2 { color: #0056b3; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
@@ -23,268 +18,260 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #f2f2f2; }
-
-        /* Style ใหม่สำหรับระบบ Login */
-        #auth-container { text-align: center; padding: 50px; }
-        #app-container { display: none; } /* ซ่อนแอปไว้ก่อนเป็นค่าเริ่มต้น */
-        #user-info { text-align: right; margin-bottom: 20px; display: none; }
-        #logout-btn { width: auto; padding: 5px 10px; font-size: 14px; background-color: #dc3545;}
+        #user-id-screen, #app-container { display: none; }
+        #user-info { text-align: right; margin-bottom: 10px; font-size: 14px; color: #555;}
     </style>
 </head>
 <body>
-    
-    <!-- ส่วนแสดงข้อมูลผู้ใช้และปุ่ม Logout -->
-    <div id="user-info">
-        สวัสดี, <span id="user-display-name"></span>! 
-        <button id="logout-btn">ออกจากระบบ</button>
-    </div>
 
-    <!-- ส่วนสำหรับปุ่ม Login -->
-    <div id="auth-container">
-        <h1>Welcome to AI Nutritionist & Health Tracker</h1>
-        <p>กรุณาลงชื่อเข้าใช้ด้วยบัญชี Google เพื่อเริ่มต้นใช้งาน</p>
-        <button id="login-btn" style="max-width: 300px; margin: 0 auto; background-color: #4285F4;">Sign in with Google</button>
+    <!-- ส่วนสำหรับตั้ง/เปลี่ยน User ID -->
+    <div id="user-id-screen" class="container">
+        <h2>ระบุตัวตนผู้ใช้งาน</h2>
+        <p>กรุณาตั้งชื่อผู้ใช้ (User ID) ที่ไม่ซ้ำใครเพื่อบันทึกข้อมูลของคุณ (เช่น ชื่อเล่น, อีเมล, หรือรหัสส่วนตัว)</p>
+        <form id="user-id-form">
+            <div>
+                <label for="user-id-input">User ID ของฉัน:</label>
+                <input type="text" id="user-id-input" required>
+            </div>
+            <button type="submit">เริ่มต้นใช้งาน / เปลี่ยนผู้ใช้</button>
+        </form>
     </div>
 
     <!-- ครอบแอปทั้งหมดไว้ใน Container นี้ -->
     <div id="app-container">
+        <div id="user-info">
+            กำลังใช้งานในชื่อ: <strong id="current-user-id"></strong> 
+            <button id="change-user-btn" style="width:auto; padding: 2px 8px; font-size: 12px;">เปลี่ยนผู้ใช้</button>
+        </div>
         <h1>AI Nutritionist & Health Tracker</h1>
-        
-        <!-- ส่วนคำนวณค่าสุขภาพ -->
-        <div class="container">
-            <h2>คำนวณค่าสุขภาพของคุณ</h2>
-            <form id="health-form">
-                <div><label for="gender">เพศ:</label><select id="gender" name="gender" required><option value="male">ชาย</option><option value="female">หญิง</option></select></div>
-                <div><label for="age">อายุ (ปี):</label><input type="number" id="age" name="age" required></div>
-                <div><label for="weight">น้ำหนัก (กก.):</label><input type="number" id="weight" name="weight" step="0.1" required></div>
-                <div><label for="height">ส่วนสูง (ซม.):</label><input type="number" id="height" name="height" required></div>
-                <div><label for="activity">ระดับกิจกรรม:</label><select id="activity" name="activity" required><option value="1.2">นั่งทำงาน, ไม่ค่อยออกกำลังกาย</option><option value="1.375">ออกกำลังกายเบาๆ (1-3 วัน/สัปดาห์)</option><option value="1.55">ออกกำลังกายปานกลาง (3-5 วัน/สัปดาห์)</option><option value="1.725">ออกกำลังกายหนัก (6-7 วัน/สัปดาห์)</option><option value="1.9">ออกกำลังกายหนักมาก (วันละ 2 ครั้ง)</option></select></div>
-                <button type="submit">คำนวณ</button>
-            </form>
-            <div id="results" class="results-box"><p>ผลลัพธ์การคำนวณจะแสดงที่นี่...</p></div>
-        </div>
-        
-        <!-- ส่วนแนะนำอาหาร -->
-        <div class="container">
-            <h2>แนะนำเมนูอาหาร</h2>
-            <p>ใส่เป้าหมายแคลอรี่ต่อวันของคุณ เพื่อรับการแนะนำชุดเมนูอาหาร</p>
-            <form id="recommend-form">
-                <div><label for="target-calories">เป้าหมายแคลอรี่ (kcal):</label><input type="number" id="target-calories" value="2000" required></div>
-                <button type="submit">แนะนำเมนู</button>
-            </form>
-            <div id="recommendation-results" class="results-box"><p>เมนูที่แนะนำจะแสดงที่นี่...</p></div>
-        </div>
-
-        <!-- ส่วนบันทึกมื้ออาหาร -->
-        <div class="container">
-            <h2>บันทึกมื้ออาหาร</h2>
-            <form id="log-form">
-                <div><label for="meal-name">ชื่ออาหาร:</label><input type="text" id="meal-name" required></div>
-                <div><label for="calories">แคลอรี่ (kcal):</label><input type="number" id="calories" required></div>
-                <div><label for="sodium">โซเดียม (mg):</label><input type="number" id="sodium" required></div>
-                <button type="submit">บันทึกมื้ออาหาร</button>
-            </form>
-        </div>
-
-        <!-- ส่วนแสดงผลข้อมูลที่บันทึก -->
-        <div class="container">
-            <h2>รายการอาหารที่บันทึกไว้</h2>
-            <table id="log-table">
-                <thead><tr><th>วันที่</th><th>รายการ</th><th>แคลอรี่ (kcal)</th><th>โซเดียม (mg)</th></tr></thead>
-                <tbody id="log-table-body"></tbody>
-            </table>
-        </div>
-        
-        <!-- ส่วนแสดงผลกราฟรายวัน -->
-        <div class="container">
-            <h2>กราฟสรุปแคลอรี่รายวัน</h2>
-            <canvas id="calorie-chart"></canvas>
-        </div>
-
-        <!-- ส่วนแสดงผลกราฟรายสัปดาห์ -->
-        <div class="container">
-            <h2>กราฟสรุปแคลอรี่รายสัปดาห์ (เฉลี่ยต่อวัน)</h2>
-            <canvas id="weekly-calorie-chart"></canvas>
-        </div>
+        <!-- เนื้อหาแอปทั้งหมดจะถูกเติมโดย JavaScript -->
     </div>
 
-
     <script>
-        // 2. <<< สำคัญที่สุด: ใส่ firebaseConfig ของคุณที่คัดลอกมาตรงนี้! >>>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDhNek-i8zqj3q8mmJI8YAGNwqT9k1mRCI",
-            authDomain: "ai-nutritionist-tracker.firebaseapp.com",
-            projectId: "ai-nutritionist-tracker",
-            storageBucket: "ai-nutritionist-tracker.firebasestorage.app",
-            messagingSenderId: "435974249973",
-            appId: "1:435974249973:web:4515eaf21e40cefeaa54bc"
-        };
+        // --- URL ของ Backend API (อย่าลืมเปลี่ยนเป็น URL ของคุณ) ---
+        const API_URL = 'https://api-main-435974249973-as.a.run.app'; // <-- ใส่ URL ของ Cloud Run ที่ถูกต้องที่นี่
 
-        // --- URL ของ Backend API ---
-        // (เมื่อนำ Backend ขึ้นระบบแล้ว ให้เปลี่ยนเป็น URL ของ Cloud Run/Function)
-        const API_URL = 'https://api-main-435974249973.asia-southeast1.run.app';
-
-        // --- เริ่มต้น Firebase ---
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        // --- อ้างอิงถึง Elements ---
-        const authContainer = document.getElementById('auth-container');
+        // --- อ้างอิงถึง Elements หลัก ---
+        const userIdScreen = document.getElementById('user-id-screen');
         const appContainer = document.getElementById('app-container');
-        const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const userInfoDiv = document.getElementById('user-info');
-        const userDisplayNameSpan = document.getElementById('user-display-name');
-        
-        const healthForm = document.getElementById('health-form');
-        const resultsDiv = document.getElementById('results');
-        const recommendForm = document.getElementById('recommend-form');
-        const recommendationResultsDiv = document.getElementById('recommendation-results');
-        const logForm = document.getElementById('log-form');
-        const logTableBody = document.getElementById('log-table-body');
-        const chartCanvas = document.getElementById('calorie-chart');
-        const weeklyChartCanvas = document.getElementById('weekly-calorie-chart');
-        let calorieChart;
-        let weeklyCalorieChart;
+        const userIdForm = document.getElementById('user-id-form');
+        const userIdInput = document.getElementById('user-id-input');
+        const currentUserSpan = document.getElementById('current-user-id');
+        const changeUserBtn = document.getElementById('change-user-btn');
 
-        // --- 3. หัวใจหลัก: จัดการสถานะการล็อกอิน ---
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                // ผู้ใช้ล็อกอินอยู่
-                userInfoDiv.style.display = 'block';
-                userDisplayNameSpan.textContent = user.displayName;
-                authContainer.style.display = 'none';
+        // --- ระบบ User ID แบบง่าย ---
+        let currentUserId = null;
+
+        function setupUser(userId) {
+            if (userId) {
+                currentUserId = userId;
+                localStorage.setItem('nutritionistUserId', userId);
+                currentUserSpan.textContent = userId;
+                userIdScreen.style.display = 'none';
                 appContainer.style.display = 'block';
-
-                // โหลดข้อมูลส่วนตัวของผู้ใช้
+                // โหลดข้อมูลของผู้ใช้คนนี้
                 fetchAndDisplayLogs();
                 fetchAndDisplayWeeklySummary();
             } else {
-                // ผู้ใช้ล็อกเอาท์
-                userInfoDiv.style.display = 'none';
-                authContainer.style.display = 'block';
+                userIdScreen.style.display = 'block';
                 appContainer.style.display = 'none';
             }
-        });
+        }
 
-        // --- Event Listeners สำหรับ Login/Logout ---
-        loginBtn.addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(error => console.error("Login Error:", error));
-        });
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut();
-        });
-
-        // --- 4. ฟังก์ชันใหม่: สำหรับส่งคำขอพร้อม Token ยืนยันตัวตน ---
-        async function fetchWithAuth(url, options = {}) {
-            const user = auth.currentUser;
-            if (!user) {
-                throw new Error("User not logged in");
+        userIdForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const enteredId = userIdInput.value.trim();
+            if (enteredId) {
+                setupUser(enteredId);
             }
+        });
 
-            const idToken = await user.getIdToken(true); // ดึง "บัตรผ่าน"
+        changeUserBtn.addEventListener('click', () => {
+            localStorage.removeItem('nutritionistUserId');
+            currentUserId = null;
+            userIdInput.value = '';
+            setupUser(null);
+        });
 
+        // --- ฟังก์ชันส่งคำขอพร้อม User ID ---
+        async function fetchWithUserId(url, options = {}) {
+            if (!currentUserId) {
+                throw new Error("User ID not set");
+            }
             const headers = {
                 ...options.headers,
-                'Authorization': `Bearer ${idToken}` // แนบบัตรผ่านไปกับ Header
+                'X-User-ID': currentUserId // ส่ง User ID ไปกับ Custom Header
             };
-
             return fetch(url, { ...options, headers });
         }
-        
-        // --- 5. แก้ไขฟังก์ชันเดิมทั้งหมดให้ใช้ fetchWithAuth ---
-        
-        // จัดการการคำนวณค่าสุขภาพ (ไม่มีการส่ง Token เพราะเป็นข้อมูลทั่วไป)
-        healthForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(healthForm);
-            const requestData = { "gender": formData.get('gender'), "age": parseInt(formData.get('age')), "weight_kg": parseFloat(formData.get('weight')), "height_cm": parseFloat(formData.get('height')), "activity_factor": parseFloat(formData.get('activity'))};
-            resultsDiv.innerHTML = '<p>กำลังคำนวณ...</p>';
-            fetch(`${API_URL}/calculate`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(requestData) })
-            .then(res => res.json()).then(data => {
-                if (data.error) throw new Error(data.error);
-                resultsDiv.innerHTML = `<p><strong>BMI:</strong> ${data.bmi}</p><p><strong>BMR:</strong> ${data.bmr} kcal/day</p><p><strong>TDEE:</strong> ${data.tdee} kcal/day</p>`;
-            }).catch(err => resultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`);
-        });
-        
-        // จัดการการแนะนำอาหาร (ไม่มีการส่ง Token เพราะเป็นข้อมูลทั่วไป)
-        recommendForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const targetCalories = document.getElementById('target-calories').value;
-            if (!targetCalories || targetCalories <= 0) { alert('กรุณาใส่เป้าหมายแคลอรี่ที่ถูกต้อง'); return; }
-            recommendationResultsDiv.innerHTML = '<p>กำลังค้นหาเมนูที่เหมาะสม...</p>';
-            fetch(`${API_URL}/recommend_meals?target=${targetCalories}`)
-            .then(res => res.json()).then(data => {
-                if (data.error) throw new Error(data.error);
-                let totalCalories = 0;
-                let html = '<h4>แผนการกินที่แนะนำ:</h4><ul>';
-                data.forEach(meal => { html += `<li><strong>${meal.type}:</strong> ${meal.name} (${meal.calories} kcal)</li>`; totalCalories += meal.calories; });
-                html += `</ul><p><strong>แคลอรี่รวมโดยประมาณ:</strong> ${totalCalories} kcal</p>`;
-                recommendationResultsDiv.innerHTML = html;
-            }).catch(err => recommendationResultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`);
-        });
 
-        // จัดการการบันทึกมื้ออาหาร (ต้องใช้ Token)
-        logForm.addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const mealName = document.getElementById('meal-name').value.trim();
-            const caloriesValue = document.getElementById('calories').value;
-            if (!mealName || caloriesValue === '') { alert('กรุณากรอกข้อมูลมื้ออาหารให้ครบทุกช่องครับ'); return; }
-            const mealData = { meal_name: mealName, calories: parseInt(caloriesValue), sodium: parseInt(document.getElementById('sodium').value) };
-            try {
-                const response = await fetchWithAuth(`${API_URL}/log_meal`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(mealData) });
-                const data = await response.json();
-                if (data.success) { logForm.reset(); fetchAndDisplayLogs(); fetchAndDisplayWeeklySummary(); }
-                else { alert('ไม่สามารถบันทึกข้อมูลได้'); }
-            } catch(error) { console.error('Error logging meal:', error); }
-        });
-
-        // ฟังก์ชันดึงข้อมูลรายวัน (ต้องใช้ Token)
+        // --- ฟังก์ชันหลักสำหรับดึงข้อมูลและวาดกราฟ ---
         async function fetchAndDisplayLogs() {
             try {
-                const response = await fetchWithAuth(`${API_URL}/get_logs`);
+                const response = await fetchWithUserId(`${API_URL}/get_logs`);
                 const logs = await response.json();
-                if(logs.error) throw new Error(logs.details);
+                if(logs.error) throw new Error(logs.details || logs.error);
+                
+                const logTableBody = document.getElementById('log-table-body');
                 logTableBody.innerHTML = '';
                 logs.forEach(log => {
                     const date = new Date(log.timestamp).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric'});
-                    logTableBody.innerHTML += `<tr><td>${date}</td><td>${log.meal_name}</td><td>${log.calories}</td><td>${log.sodium}</td></tr>`;
+                    logTableBody.innerHTML += `<tr><td>${date}</td><td>${log.meal_name}</td><td>${log.calories}</td><td>${log.sodium || 'N/A'}</td></tr>`;
                 });
-                renderChart(logs);
+                renderDailyChart(logs);
             } catch (error) {
                 console.error('Error fetching logs:', error);
-                logTableBody.innerHTML = '<tr><td colspan="4">กรุณาล็อกอินเพื่อดูข้อมูล</td></tr>';
+                const logTableBody = document.getElementById('log-table-body');
+                if(logTableBody) logTableBody.innerHTML = '<tr><td colspan="4">ไม่สามารถโหลดข้อมูลได้</td></tr>';
             }
         }
         
-        // ฟังก์ชันดึงข้อมูลรายสัปดาห์ (ต้องใช้ Token)
         async function fetchAndDisplayWeeklySummary() {
             try {
-                const response = await fetchWithAuth(`${API_URL}/get_weekly_summary`);
+                const response = await fetchWithUserId(`${API_URL}/get_weekly_summary`);
                 const summaryData = await response.json();
-                if (summaryData.error) throw new Error(summaryData.details);
+                if (summaryData.error) throw new Error(summaryData.details || summaryData.error);
                 renderWeeklyChart(summaryData);
             } catch (error) {
                 console.error('Error fetching weekly summary:', error);
             }
         }
 
-        // --- ฟังก์ชันวาดกราฟ (เหมือนเดิม) ---
-        function renderChart(logs) {
+        let dailyChart;
+        function renderDailyChart(logs) {
             const dailyData = logs.reduce((acc, log) => {
                 const date = new Date(log.timestamp).toLocaleDateString('th-TH');
                 if (!acc[date]) acc[date] = 0;
                 acc[date] += log.calories;
                 return acc;
             }, {});
-            if (calorieChart) calorieChart.destroy();
-            calorieChart = new Chart(chartCanvas, { type: 'line', data: { labels: Object.keys(dailyData).reverse(), datasets: [{ label: 'แคลอรี่ที่บริโภค', data: Object.values(dailyData).reverse(), borderColor: 'rgba(0, 123, 255, 1)', backgroundColor: 'rgba(0, 123, 255, 0.2)', fill: true, tension: 0.1 }] }, options: { scales: { y: { beginAtZero: true } }, responsive: true } });
+            const chartCanvas = document.getElementById('calorie-chart');
+            if (dailyChart) dailyChart.destroy();
+            dailyChart = new Chart(chartCanvas, { type: 'line', data: { labels: Object.keys(dailyData).reverse(), datasets: [{ label: 'แคลอรี่ที่บริโภค', data: Object.values(dailyData).reverse(), borderColor: 'rgba(0, 123, 255, 1)', backgroundColor: 'rgba(0, 123, 255, 0.2)', fill: true, tension: 0.1 }] }, options: { scales: { y: { beginAtZero: true } }, responsive: true } });
         }
+        
+        let weeklyChart;
         function renderWeeklyChart(summaryData) {
-            if (weeklyCalorieChart) weeklyCalorieChart.destroy();
-            weeklyCalorieChart = new Chart(weeklyChartCanvas, { type: 'bar', data: { labels: summaryData.map(item => item.week_label), datasets: [{ label: 'ค่าเฉลี่ยแคลอรี่ต่อวัน', data: summaryData.map(item => item.avg_calories_per_day), backgroundColor: 'rgba(40, 167, 69, 0.7)', borderColor: 'rgba(40, 167, 69, 1)', borderWidth: 1 }] }, options: { scales: { y: { beginAtZero: true, title: { display: true, text: 'แคลอรี่ (kcal)' } } }, responsive: true, plugins: { legend: { display: false } } } });
+            const weeklyChartCanvas = document.getElementById('weekly-calorie-chart');
+            if (weeklyChart) weeklyChart.destroy();
+            weeklyChart = new Chart(weeklyChartCanvas, { type: 'bar', data: { labels: summaryData.map(item => item.week_label), datasets: [{ label: 'ค่าเฉลี่ยแคลอรี่ต่อวัน', data: summaryData.map(item => item.avg_calories_per_day), backgroundColor: 'rgba(40, 167, 69, 0.7)', borderColor: 'rgba(40, 167, 69, 1)', borderWidth: 1 }] }, options: { scales: { y: { beginAtZero: true, title: { display: true, text: 'แคลอรี่ (kcal)' } } }, responsive: true, plugins: { legend: { display: false } } } });
         }
+        
+        // --- เริ่มต้นแอป ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. ตรวจสอบ User ID ที่เคยบันทึกไว้
+            const savedUserId = localStorage.getItem('nutritionistUserId');
+            
+            // 2. เติม HTML ของแอปเข้าไปก่อน
+            appContainer.insertAdjacentHTML('beforeend', `
+                <div class="container">
+                    <h2>คำนวณค่าสุขภาพของคุณ</h2>
+                    <form id="health-form">
+                        <div><label for="gender">เพศ:</label><select id="gender" name="gender" required><option value="male">ชาย</option><option value="female">หญิง</option></select></div>
+                        <div><label for="age">อายุ (ปี):</label><input type="number" id="age" name="age" required></div>
+                        <div><label for="weight">น้ำหนัก (กก.):</label><input type="number" id="weight" name="weight" step="0.1" required></div>
+                        <div><label for="height">ส่วนสูง (ซม.):</label><input type="number" id="height" name="height" required></div>
+                        <div><label for="activity">ระดับกิจกรรม:</label><select id="activity" name="activity" required><option value="1.2">นั่งทำงาน, ไม่ค่อยออกกำลังกาย</option><option value="1.375">ออกกำลังกายเบาๆ (1-3 วัน/สัปดาห์)</option><option value="1.55">ออกกำลังกายปานกลาง (3-5 วัน/สัปดาห์)</option><option value="1.725">ออกกำลังกายหนัก (6-7 วัน/สัปดาห์)</option><option value="1.9">ออกกำลังกายหนักมาก (วันละ 2 ครั้ง)</option></select></div>
+                        <button type="submit">คำนวณ</button>
+                    </form>
+                    <div id="results" class="results-box"><p>ผลลัพธ์การคำนวณจะแสดงที่นี่...</p></div>
+                </div>
+                <div class="container">
+                    <h2>แนะนำเมนูอาหาร</h2>
+                    <p>ใส่เป้าหมายแคลอรี่ต่อวันของคุณ เพื่อรับการแนะนำชุดเมนูอาหาร</p>
+                    <form id="recommend-form">
+                        <div><label for="target-calories">เป้าหมายแคลอรี่ (kcal):</label><input type="number" id="target-calories" value="2000" required></div>
+                        <button type="submit">แนะนำเมนู</button>
+                    </form>
+                    <div id="recommendation-results" class="results-box"><p>เมนูที่แนะนำจะแสดงที่นี่...</p></div>
+                </div>
+                <div class="container">
+                    <h2>บันทึกมื้ออาหาร</h2>
+                    <form id="log-form">
+                        <div><label for="meal-name">ชื่ออาหาร:</label><input type="text" id="meal-name" required></div>
+                        <div><label for="calories">แคลอรี่ (kcal):</label><input type="number" id="calories" required></div>
+                        <div><label for="sodium">โซเดียม (mg):</label><input type="number" id="sodium" required></div>
+                        <button type="submit">บันทึกมื้ออาหาร</button>
+                    </form>
+                </div>
+                <div class="container">
+                    <h2>รายการอาหารที่บันทึกไว้</h2>
+                    <table id="log-table">
+                        <thead><tr><th>วันที่</th><th>รายการ</th><th>แคลอรี่ (kcal)</th><th>โซเดียม (mg)</th></tr></thead>
+                        <tbody id="log-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="container">
+                    <h2>กราฟสรุปแคลอรี่รายวัน</h2>
+                    <canvas id="calorie-chart"></canvas>
+                </div>
+                <div class="container">
+                    <h2>กราฟสรุปแคลอรี่รายสัปดาห์ (เฉลี่ยต่อวัน)</h2>
+                    <canvas id="weekly-calorie-chart"></canvas>
+                </div>
+            `);
+
+            // 3. อ้างอิงถึง Elements ที่อยู่ใน App Container (หลังจากที่มันถูกสร้างแล้ว)
+            const healthForm = document.getElementById('health-form');
+            const resultsDiv = document.getElementById('results');
+            const recommendForm = document.getElementById('recommend-form');
+            const recommendationResultsDiv = document.getElementById('recommendation-results');
+            const logForm = document.getElementById('log-form');
+
+            // 4. ผูก Event Listeners ทั้งหมด
+            healthForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(healthForm);
+                const requestData = { "gender": formData.get('gender'), "age": parseInt(formData.get('age')), "weight_kg": parseFloat(formData.get('weight')), "height_cm": parseFloat(formData.get('height')), "activity_factor": parseFloat(formData.get('activity'))};
+                resultsDiv.innerHTML = '<p>กำลังคำนวณ...</p>';
+                fetch(`${API_URL}/calculate`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(requestData) })
+                .then(res => res.json()).then(data => {
+                    if (data.error) throw new Error(data.error);
+                    resultsDiv.innerHTML = `<p><strong>BMI:</strong> ${data.bmi}</p><p><strong>BMR:</strong> ${data.bmr} kcal/day</p><p><strong>TDEE:</strong> ${data.tdee} kcal/day</p>`;
+                }).catch(err => resultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`);
+            });
+
+            recommendForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const targetCalories = document.getElementById('target-calories').value;
+                if (!targetCalories || targetCalories <= 0) { alert('กรุณาใส่เป้าหมายแคลอรี่ที่ถูกต้อง'); return; }
+                recommendationResultsDiv.innerHTML = '<p>กำลังค้นหาเมนูที่เหมาะสม...</p>';
+                fetch(`${API_URL}/recommend_meals?target=${targetCalories}`)
+                .then(res => res.json()).then(data => {
+                    if (data.error) throw new Error(data.error);
+                    let totalCalories = 0;
+                    let html = '<h4>แผนการกินที่แนะนำ:</h4><ul>';
+                    data.forEach(meal => { html += `<li><strong>${meal.type || 'มื้ออาหาร'}:</strong> ${meal.name} (${meal.calories} kcal)</li>`; totalCalories += meal.calories; });
+                    html += `</ul><p><strong>แคลอรี่รวมโดยประมาณ:</strong> ${totalCalories} kcal</p>`;
+                    recommendationResultsDiv.innerHTML = html;
+                }).catch(err => recommendationResultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`);
+            });
+
+            logForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const mealName = document.getElementById('meal-name').value.trim();
+                const caloriesValue = document.getElementById('calories').value;
+                const sodiumValue = document.getElementById('sodium').value;
+                if (!mealName || caloriesValue === '') { alert('กรุณากรอกชื่ออาหารและแคลอรี่ครับ'); return; }
+                const mealData = { meal_name: mealName, calories: parseInt(caloriesValue), sodium: parseInt(sodiumValue) };
+                try {
+                    const response = await fetchWithUserId(`${API_URL}/log_meal`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(mealData) });
+                    const data = await response.json();
+                    if (data.success) {
+                        logForm.reset();
+                        fetchAndDisplayLogs();
+                        fetchAndDisplayWeeklySummary();
+                    } else {
+                        alert('ไม่สามารถบันทึกข้อมูลได้: ' + (data.error || ''));
+                    }
+                } catch(error) {
+                    console.error('Error logging meal:', error);
+                }
+            });
+
+            // 5. แสดงหน้าจอที่ถูกต้อง
+            setupUser(savedUserId);
+        });
     </script>
 </body>
 </html>
