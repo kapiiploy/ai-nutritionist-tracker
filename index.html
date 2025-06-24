@@ -188,7 +188,8 @@
                     body: JSON.stringify(requestData)
                 }).then(res => res.json());
                 if (data.error) throw new Error(data.error);
-                resultsDiv.innerHTML = `<p><strong>BMI:</strong> ${data.bmi}</p><p><strong>TDEE:</strong> ${data.tdee} kcal/day</p>`;
+                // แก้ไข: เพิ่มการแสดงผล BMR
+                resultsDiv.innerHTML = `<p><strong>BMI:</strong> ${data.bmi}</p><p><strong>BMR:</strong> ${data.bmr} kcal/day</p><p><strong>TDEE:</strong> ${data.tdee} kcal/day</p>`;
             } catch(err) {
                 resultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`;
             }
