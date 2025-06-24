@@ -6,7 +6,7 @@
     <title>AI Nutritionist & Health Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background-color: #f9f9f9; color: #333; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background-color: #f9f9f9; color: #333; }
         h1, h2 { color: #0056b3; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
         .container { background-color: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 25px; }
         form div { margin-bottom: 15px; }
@@ -18,48 +18,71 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #f2f2f2; }
-        #user-id-screen, #app-container { display: none; }
+        #user-id-screen { display: block; } /* แสดงหน้าตั้ง ID ก่อน */
+        #app-container { display: none; } /* ซ่อนแอปไว้ก่อน */
         #user-info { text-align: right; margin-bottom: 10px; font-size: 14px; color: #555;}
     </style>
 </head>
 <body>
-
-    <!-- ส่วนสำหรับตั้ง/เปลี่ยน User ID -->
     <div id="user-id-screen" class="container">
         <h2>ระบุตัวตนผู้ใช้งาน</h2>
         <p>กรุณาตั้งชื่อผู้ใช้ (User ID) ที่ไม่ซ้ำใครเพื่อบันทึกข้อมูลของคุณ (เช่น ชื่อเล่น, อีเมล, หรือรหัสส่วนตัว)</p>
         <form id="user-id-form">
-            <div>
-                <label for="user-id-input">User ID ของฉัน:</label>
-                <input type="text" id="user-id-input" required>
-            </div>
-            <button type="submit">เริ่มต้นใช้งาน / เปลี่ยนผู้ใช้</button>
+            <div><label for="user-id-input">User ID ของฉัน:</label><input type="text" id="user-id-input" required></div>
+            <button type="submit">เริ่มต้นใช้งาน</button>
         </form>
     </div>
-
-    <!-- ครอบแอปทั้งหมดไว้ใน Container นี้ -->
     <div id="app-container">
-        <div id="user-info">
-            กำลังใช้งานในชื่อ: <strong id="current-user-id"></strong> 
-            <button id="change-user-btn" style="width:auto; padding: 2px 8px; font-size: 12px;">เปลี่ยนผู้ใช้</button>
-        </div>
+        <div id="user-info">กำลังใช้งานในชื่อ: <strong id="current-user-id"></strong> <button id="change-user-btn" style="width:auto; padding: 2px 8px; font-size: 12px;">เปลี่ยนผู้ใช้</button></div>
         <h1>AI Nutritionist & Health Tracker</h1>
-        <!-- เนื้อหาแอปทั้งหมดจะถูกเติมโดย JavaScript -->
+        <div class="container">
+            <h2>คำนวณค่าสุขภาพของคุณ</h2>
+            <form id="health-form">
+                <div><label for="gender">เพศ:</label><select id="gender" name="gender" required><option value="male">ชาย</option><option value="female">หญิง</option></select></div>
+                <div><label for="age">อายุ (ปี):</label><input type="number" id="age" name="age" required></div>
+                <div><label for="weight">น้ำหนัก (กก.):</label><input type="number" id="weight" name="weight" step="0.1" required></div>
+                <div><label for="height">ส่วนสูง (ซม.):</label><input type="number" id="height" name="height" required></div>
+                <div><label for="activity">ระดับกิจกรรม:</label><select id="activity" name="activity" required><option value="1.2">นั่งทำงาน</option><option value="1.55">ออกกำลังกายปานกลาง</option><option value="1.9">ออกกำลังกายหนัก</option></select></div>
+                <button type="submit">คำนวณ</button>
+            </form>
+            <div id="results" class="results-box"><p>ผลลัพธ์การคำนวณจะแสดงที่นี่...</p></div>
+        </div>
+        <div class="container">
+            <h2>บันทึกมื้ออาหาร</h2>
+            <form id="log-form">
+                <div><label for="meal-name">ชื่ออาหาร:</label><input type="text" id="meal-name" required></div>
+                <div><label for="calories">แคลอรี่ (kcal):</label><input type="number" id="calories" required></div>
+                <div><label for="sodium">โซเดียม (mg):</label><input type="number" id="sodium"></div>
+                <button type="submit">บันทึกมื้ออาหาร</button>
+            </form>
+        </div>
+        <div class="container">
+            <h2>รายการอาหารที่บันทึกไว้</h2>
+            <table id="log-table">
+                <thead><tr><th>วันที่</th><th>รายการ</th><th>แคลอรี่</th><th>โซเดียม</th></tr></thead>
+                <tbody id="log-table-body"></tbody>
+            </table>
+        </div>
+        <div class="container">
+            <h2>กราฟสรุปแคลอรี่รายวัน</h2>
+            <canvas id="calorie-chart"></canvas>
+        </div>
     </div>
-
     <script>
-        // --- URL ของ Backend API (อย่าลืมเปลี่ยนเป็น URL ของคุณ) ---
-        const API_URL = 'https://api-main-435974249973.asia-southeast1.run.app'; // <-- ใส่ URL ของ Cloud Run ที่ถูกต้องที่นี่
+        const API_URL = 'https://api-main-435974249973.asia-southeast1.run.app';
 
-        // --- อ้างอิงถึง Elements หลัก ---
         const userIdScreen = document.getElementById('user-id-screen');
         const appContainer = document.getElementById('app-container');
         const userIdForm = document.getElementById('user-id-form');
         const userIdInput = document.getElementById('user-id-input');
         const currentUserSpan = document.getElementById('current-user-id');
         const changeUserBtn = document.getElementById('change-user-btn');
-
-        // --- ระบบ User ID แบบง่าย ---
+        const healthForm = document.getElementById('health-form');
+        const resultsDiv = document.getElementById('results');
+        const logForm = document.getElementById('log-form');
+        const logTableBody = document.getElementById('log-table-body');
+        const chartCanvas = document.getElementById('calorie-chart');
+        let dailyChart;
         let currentUserId = null;
 
         function setupUser(userId) {
@@ -69,75 +92,39 @@
                 currentUserSpan.textContent = userId;
                 userIdScreen.style.display = 'none';
                 appContainer.style.display = 'block';
-                // โหลดข้อมูลของผู้ใช้คนนี้
                 fetchAndDisplayLogs();
-                fetchAndDisplayWeeklySummary();
             } else {
                 userIdScreen.style.display = 'block';
                 appContainer.style.display = 'none';
             }
         }
 
-        userIdForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const enteredId = userIdInput.value.trim();
-            if (enteredId) {
-                setupUser(enteredId);
-            }
-        });
-
-        changeUserBtn.addEventListener('click', () => {
-            localStorage.removeItem('nutritionistUserId');
-            currentUserId = null;
-            userIdInput.value = '';
-            setupUser(null);
-        });
-
-        // --- ฟังก์ชันส่งคำขอพร้อม User ID ---
         async function fetchWithUserId(url, options = {}) {
-            if (!currentUserId) {
-                throw new Error("User ID not set");
+            if (!currentUserId) throw new Error("User ID not set");
+            const headers = { ...options.headers, 'X-User-ID': currentUserId };
+            const response = await fetch(url, { ...options, headers });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown server error' }));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
             }
-            const headers = {
-                ...options.headers,
-                'X-User-ID': currentUserId // ส่ง User ID ไปกับ Custom Header
-            };
-            return fetch(url, { ...options, headers });
+            return response.json();
         }
 
-        // --- ฟังก์ชันหลักสำหรับดึงข้อมูลและวาดกราฟ ---
         async function fetchAndDisplayLogs() {
             try {
-                const response = await fetchWithUserId(`${API_URL}/get_logs`);
-                const logs = await response.json();
-                if(logs.error) throw new Error(logs.details || logs.error);
-                
-                const logTableBody = document.getElementById('log-table-body');
+                const logs = await fetchWithUserId(`${API_URL}/get_logs`);
                 logTableBody.innerHTML = '';
                 logs.forEach(log => {
-                    const date = new Date(log.timestamp).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric'});
+                    const date = new Date(log.timestamp).toLocaleDateString('th-TH');
                     logTableBody.innerHTML += `<tr><td>${date}</td><td>${log.meal_name}</td><td>${log.calories}</td><td>${log.sodium || 'N/A'}</td></tr>`;
                 });
                 renderDailyChart(logs);
             } catch (error) {
                 console.error('Error fetching logs:', error);
-                const logTableBody = document.getElementById('log-table-body');
-                if(logTableBody) logTableBody.innerHTML = '<tr><td colspan="4">ไม่สามารถโหลดข้อมูลได้</td></tr>';
-            }
-        }
-        
-        async function fetchAndDisplayWeeklySummary() {
-            try {
-                const response = await fetchWithUserId(`${API_URL}/get_weekly_summary`);
-                const summaryData = await response.json();
-                if (summaryData.error) throw new Error(summaryData.details || summaryData.error);
-                renderWeeklyChart(summaryData);
-            } catch (error) {
-                console.error('Error fetching weekly summary:', error);
+                logTableBody.innerHTML = `<tr><td colspan="4">เกิดข้อผิดพลาด: ${error.message}</td></tr>`;
             }
         }
 
-        let dailyChart;
         function renderDailyChart(logs) {
             const dailyData = logs.reduce((acc, log) => {
                 const date = new Date(log.timestamp).toLocaleDateString('th-TH');
@@ -145,132 +132,78 @@
                 acc[date] += log.calories;
                 return acc;
             }, {});
-            const chartCanvas = document.getElementById('calorie-chart');
             if (dailyChart) dailyChart.destroy();
-            dailyChart = new Chart(chartCanvas, { type: 'line', data: { labels: Object.keys(dailyData).reverse(), datasets: [{ label: 'แคลอรี่ที่บริโภค', data: Object.values(dailyData).reverse(), borderColor: 'rgba(0, 123, 255, 1)', backgroundColor: 'rgba(0, 123, 255, 0.2)', fill: true, tension: 0.1 }] }, options: { scales: { y: { beginAtZero: true } }, responsive: true } });
-        }
-        
-        let weeklyChart;
-        function renderWeeklyChart(summaryData) {
-            const weeklyChartCanvas = document.getElementById('weekly-calorie-chart');
-            if (weeklyChart) weeklyChart.destroy();
-            weeklyChart = new Chart(weeklyChartCanvas, { type: 'bar', data: { labels: summaryData.map(item => item.week_label), datasets: [{ label: 'ค่าเฉลี่ยแคลอรี่ต่อวัน', data: summaryData.map(item => item.avg_calories_per_day), backgroundColor: 'rgba(40, 167, 69, 0.7)', borderColor: 'rgba(40, 167, 69, 1)', borderWidth: 1 }] }, options: { scales: { y: { beginAtZero: true, title: { display: true, text: 'แคลอรี่ (kcal)' } } }, responsive: true, plugins: { legend: { display: false } } } });
-        }
-        
-        // --- เริ่มต้นแอป ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. ตรวจสอบ User ID ที่เคยบันทึกไว้
-            const savedUserId = localStorage.getItem('nutritionistUserId');
-            
-            // 2. เติม HTML ของแอปเข้าไปก่อน
-            appContainer.insertAdjacentHTML('beforeend', `
-                <div class="container">
-                    <h2>คำนวณค่าสุขภาพของคุณ</h2>
-                    <form id="health-form">
-                        <div><label for="gender">เพศ:</label><select id="gender" name="gender" required><option value="male">ชาย</option><option value="female">หญิง</option></select></div>
-                        <div><label for="age">อายุ (ปี):</label><input type="number" id="age" name="age" required></div>
-                        <div><label for="weight">น้ำหนัก (กก.):</label><input type="number" id="weight" name="weight" step="0.1" required></div>
-                        <div><label for="height">ส่วนสูง (ซม.):</label><input type="number" id="height" name="height" required></div>
-                        <div><label for="activity">ระดับกิจกรรม:</label><select id="activity" name="activity" required><option value="1.2">นั่งทำงาน, ไม่ค่อยออกกำลังกาย</option><option value="1.375">ออกกำลังกายเบาๆ (1-3 วัน/สัปดาห์)</option><option value="1.55">ออกกำลังกายปานกลาง (3-5 วัน/สัปดาห์)</option><option value="1.725">ออกกำลังกายหนัก (6-7 วัน/สัปดาห์)</option><option value="1.9">ออกกำลังกายหนักมาก (วันละ 2 ครั้ง)</option></select></div>
-                        <button type="submit">คำนวณ</button>
-                    </form>
-                    <div id="results" class="results-box"><p>ผลลัพธ์การคำนวณจะแสดงที่นี่...</p></div>
-                </div>
-                <div class="container">
-                    <h2>แนะนำเมนูอาหาร</h2>
-                    <p>ใส่เป้าหมายแคลอรี่ต่อวันของคุณ เพื่อรับการแนะนำชุดเมนูอาหาร</p>
-                    <form id="recommend-form">
-                        <div><label for="target-calories">เป้าหมายแคลอรี่ (kcal):</label><input type="number" id="target-calories" value="2000" required></div>
-                        <button type="submit">แนะนำเมนู</button>
-                    </form>
-                    <div id="recommendation-results" class="results-box"><p>เมนูที่แนะนำจะแสดงที่นี่...</p></div>
-                </div>
-                <div class="container">
-                    <h2>บันทึกมื้ออาหาร</h2>
-                    <form id="log-form">
-                        <div><label for="meal-name">ชื่ออาหาร:</label><input type="text" id="meal-name" required></div>
-                        <div><label for="calories">แคลอรี่ (kcal):</label><input type="number" id="calories" required></div>
-                        <div><label for="sodium">โซเดียม (mg):</label><input type="number" id="sodium" required></div>
-                        <button type="submit">บันทึกมื้ออาหาร</button>
-                    </form>
-                </div>
-                <div class="container">
-                    <h2>รายการอาหารที่บันทึกไว้</h2>
-                    <table id="log-table">
-                        <thead><tr><th>วันที่</th><th>รายการ</th><th>แคลอรี่ (kcal)</th><th>โซเดียม (mg)</th></tr></thead>
-                        <tbody id="log-table-body"></tbody>
-                    </table>
-                </div>
-                <div class="container">
-                    <h2>กราฟสรุปแคลอรี่รายวัน</h2>
-                    <canvas id="calorie-chart"></canvas>
-                </div>
-                <div class="container">
-                    <h2>กราฟสรุปแคลอรี่รายสัปดาห์ (เฉลี่ยต่อวัน)</h2>
-                    <canvas id="weekly-calorie-chart"></canvas>
-                </div>
-            `);
-
-            // 3. อ้างอิงถึง Elements ที่อยู่ใน App Container (หลังจากที่มันถูกสร้างแล้ว)
-            const healthForm = document.getElementById('health-form');
-            const resultsDiv = document.getElementById('results');
-            const recommendForm = document.getElementById('recommend-form');
-            const recommendationResultsDiv = document.getElementById('recommendation-results');
-            const logForm = document.getElementById('log-form');
-
-            // 4. ผูก Event Listeners ทั้งหมด
-            healthForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                const formData = new FormData(healthForm);
-                const requestData = { "gender": formData.get('gender'), "age": parseInt(formData.get('age')), "weight_kg": parseFloat(formData.get('weight')), "height_cm": parseFloat(formData.get('height')), "activity_factor": parseFloat(formData.get('activity'))};
-                resultsDiv.innerHTML = '<p>กำลังคำนวณ...</p>';
-                fetch(`${API_URL}/calculate`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(requestData) })
-                .then(res => res.json()).then(data => {
-                    if (data.error) throw new Error(data.error);
-                    resultsDiv.innerHTML = `<p><strong>BMI:</strong> ${data.bmi}</p><p><strong>BMR:</strong> ${data.bmr} kcal/day</p><p><strong>TDEE:</strong> ${data.tdee} kcal/day</p>`;
-                }).catch(err => resultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`);
-            });
-
-            recommendForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                const targetCalories = document.getElementById('target-calories').value;
-                if (!targetCalories || targetCalories <= 0) { alert('กรุณาใส่เป้าหมายแคลอรี่ที่ถูกต้อง'); return; }
-                recommendationResultsDiv.innerHTML = '<p>กำลังค้นหาเมนูที่เหมาะสม...</p>';
-                fetch(`${API_URL}/recommend_meals?target=${targetCalories}`)
-                .then(res => res.json()).then(data => {
-                    if (data.error) throw new Error(data.error);
-                    let totalCalories = 0;
-                    let html = '<h4>แผนการกินที่แนะนำ:</h4><ul>';
-                    data.forEach(meal => { html += `<li><strong>${meal.type || 'มื้ออาหาร'}:</strong> ${meal.name} (${meal.calories} kcal)</li>`; totalCalories += meal.calories; });
-                    html += `</ul><p><strong>แคลอรี่รวมโดยประมาณ:</strong> ${totalCalories} kcal</p>`;
-                    recommendationResultsDiv.innerHTML = html;
-                }).catch(err => recommendationResultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`);
-            });
-
-            logForm.addEventListener('submit', async function(event) {
-                event.preventDefault();
-                const mealName = document.getElementById('meal-name').value.trim();
-                const caloriesValue = document.getElementById('calories').value;
-                const sodiumValue = document.getElementById('sodium').value;
-                if (!mealName || caloriesValue === '') { alert('กรุณากรอกชื่ออาหารและแคลอรี่ครับ'); return; }
-                const mealData = { meal_name: mealName, calories: parseInt(caloriesValue), sodium: parseInt(sodiumValue) };
-                try {
-                    const response = await fetchWithUserId(`${API_URL}/log_meal`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(mealData) });
-                    const data = await response.json();
-                    if (data.success) {
-                        logForm.reset();
-                        fetchAndDisplayLogs();
-                        fetchAndDisplayWeeklySummary();
-                    } else {
-                        alert('ไม่สามารถบันทึกข้อมูลได้: ' + (data.error || ''));
-                    }
-                } catch(error) {
-                    console.error('Error logging meal:', error);
+            dailyChart = new Chart(chartCanvas, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(dailyData).reverse(),
+                    datasets: [{ label: 'แคลอรี่', data: Object.values(dailyData).reverse(), borderColor: '#007bff', fill: true }]
                 }
             });
+        }
+        
+        // --- Event Listeners ---
+        userIdForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const enteredId = userIdInput.value.trim();
+            if (enteredId) setupUser(enteredId);
+        });
 
-            // 5. แสดงหน้าจอที่ถูกต้อง
-            setupUser(savedUserId);
+        changeUserBtn.addEventListener('click', () => {
+            localStorage.removeItem('nutritionistUserId');
+            setupUser(null);
+        });
+
+        healthForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(healthForm);
+            const requestData = Object.fromEntries(formData.entries());
+            resultsDiv.innerHTML = '<p>กำลังคำนวณ...</p>';
+            try {
+                const data = await fetch(`${API_URL}/calculate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                }).then(res => res.json());
+                if (data.error) throw new Error(data.error);
+                resultsDiv.innerHTML = `<p><strong>BMI:</strong> ${data.bmi}</p><p><strong>TDEE:</strong> ${data.tdee} kcal/day</p>`;
+            } catch(err) {
+                resultsDiv.innerHTML = `<p>เกิดข้อผิดพลาด: ${err.message}</p>`;
+            }
+        });
+
+        logForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mealData = {
+                meal_name: document.getElementById('meal-name').value.trim(),
+                calories: parseInt(document.getElementById('calories').value),
+                sodium: parseInt(document.getElementById('sodium').value) || 0
+            };
+            if (!mealData.meal_name || isNaN(mealData.calories)) {
+                alert('กรุณากรอกชื่ออาหารและแคลอรี่'); return;
+            }
+            try {
+                await fetchWithUserId(`${API_URL}/log_meal`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(mealData)
+                });
+                logForm.reset();
+                fetchAndDisplayLogs();
+            } catch (error) {
+                alert(`ไม่สามารถบันทึกข้อมูลได้: ${error.message}`);
+            }
+        });
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedUserId = localStorage.getItem('nutritionistUserId');
+            if (savedUserId) {
+                userIdInput.value = savedUserId;
+                setupUser(savedUserId);
+            } else {
+                setupUser(null);
+            }
         });
     </script>
 </body>
